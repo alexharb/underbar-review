@@ -188,10 +188,22 @@
   //   }); // should be 5, regardless of the iterator function passed in
   //          No accumulator is given so the first element is used.
   _.reduce = function(collection, iterator, accumulator) {
-    
-    _.each(collection,function(item){
-      accumulator = iterator(item) 
+    if(!Array.isArray(collection)) {
+      var newColl = Object.values(collection);
+    } else {
+      var newColl = collection;
+    }
+    if(!accumulator && accumulator != 0) {
+      accumulator = newColl[0];
+      newColl = newColl.slice(1, newColl.length);
+    } else {
+        newColl = newColl.slice(0, newColl.length)
+    }
+    _.each(newColl, function(item){
+      accumulator = iterator(accumulator, item) 
     })
+
+    return accumulator;
   };
 
   // Determine if the array or object contains a given value (using `===`).
@@ -210,11 +222,25 @@
   // Determine whether all of the elements match a truth test.
   _.every = function(collection, iterator) {
     // TIP: Try re-using reduce() here.
+    return _.reduce(collection, function(match, item) {
+      if(match && (iterator ? iterator(item) : item)) {
+        return true
+      } else {
+          return false;
+        }
+    }, true)
   };
 
   // Determine whether any of the elements pass a truth test. If no iterator is
   // provided, provide a default one
   _.some = function(collection, iterator) {
+    return _.reduce(collection, function(match, item) {
+      if(match || (iterator ? iterator(item) : item)) {
+        return true
+      } else {
+          return false;
+        }
+    }, false)
     // TIP: There's a very clever way to re-use every() here.
   };
 
@@ -238,11 +264,29 @@
   //     bla: "even more stuff"
   //   }); // obj1 now contains key1, key2, key3 and bla
   _.extend = function(obj) {
+    var args = [].slice.call(arguments, 1);
+    for(var i = 0;i < args.length; i++) {
+      var key = Object.keys(args[i])
+      for(var j of key){
+        obj[j] = args[i][j];
+      }
+    }
+    return obj;
   };
 
   // Like extend, but doesn't ever overwrite a key that already
   // exists in obj
   _.defaults = function(obj) {
+    var args = [].slice.call(arguments, 1);
+    for(var i = 0;i < args.length; i++) {
+      var key = Object.keys(args[i])
+      for(var j of key){
+        if(!obj.hasOwnProperty(j)){
+          obj[j] = args[i][j];
+        }
+      }
+    }
+    return obj;
   };
 
 
@@ -295,6 +339,12 @@
   // parameter. For example _.delay(someFunction, 500, 'a', 'b') will
   // call someFunction('a', 'b') after 500ms
   _.delay = function(func, wait) {
+    var args = [].slice.call(arguments, 2)
+    if (args.length > 0) {
+      return setTimeout(func(args[0], args[1]), wait)
+    } else {
+      return setTimeout(func, wait)
+    }
   };
 
 
